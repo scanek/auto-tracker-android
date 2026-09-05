@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production build
+dist/
+
+# Android build outputs
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/build/
+.gradle/
+build/
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
