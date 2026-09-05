@@ -155,12 +155,8 @@ class LocalDatabaseEngine {
     const mode = localStorage.getItem('autotracker_app_mode');
     if (mode === 'standalone') return true;
     if (mode === 'synced' && serverUrl) return false;
-    // On native Android: default to standalone if no server configured
-    if (this.isNative()) {
-      return !serverUrl;
-    }
-    // On web browser: if user manually set standalone mode or if running from file
-    return !serverUrl && window.location.protocol === 'file:';
+    // By default in mobile app: standalone unless a remote server URL is configured
+    return !serverUrl;
   }
 
   public setAppMode(mode: 'standalone' | 'synced') {
@@ -174,6 +170,8 @@ class LocalDatabaseEngine {
   public async getVehicles(): Promise<Vehicle[]> {
     const vehicles = await this.getAllFromStore<Vehicle>(STORES.VEHICLES);
     for (const v of vehicles) {
+      v.is_owner = true;
+      v.owner_name = undefined;
       const services = await this.getByVehicleId<ServiceRecord>(STORES.SERVICE_RECORDS, v.id);
       const fuel = await this.getByVehicleId<FuelLog>(STORES.FUEL_LOGS, v.id);
       const reminders = await this.getByVehicleId<MaintenancePlan>(STORES.REMINDERS, v.id);

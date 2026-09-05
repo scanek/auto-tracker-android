@@ -20,6 +20,7 @@ import {
   Fuel,
 } from 'lucide-react';
 import { Vehicle } from '../types';
+import { localDB } from '../services/localDatabase';
 
 interface GarageProps {
   vehicles: Vehicle[];
@@ -102,7 +103,7 @@ export const Garage: React.FC<GarageProps> = ({
     <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-8 animate-fadeIn">
 
       {/* Guest Welcome & Showcase Banner */}
-      {!isAuthenticated && (
+      {!isAuthenticated && !localDB.isStandalone() && (
         <div className="bg-gradient-to-r from-brand-600/15 via-brand-500/10 to-purple-600/15 border border-brand-500/30 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-fadeIn">
           <div className="flex items-center space-x-3.5 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-shrink-0 shadow-inner">
@@ -148,7 +149,7 @@ export const Garage: React.FC<GarageProps> = ({
               Выберите автомобиль для просмотра журнала обслуживания, заправок и аналитики
             </p>
           </div>
-          {isAuthenticated && (
+          {(isAuthenticated || localDB.isStandalone()) && (
             <button
               onClick={onAddVehicle}
               className="flex items-center space-x-1.5 bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95"
@@ -276,7 +277,8 @@ export const Garage: React.FC<GarageProps> = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {displayedVehicles.map((v) => {
-              const isOwner = v.is_owner !== false;
+              const isOwner = v.is_owner !== false || localDB.isStandalone();
+              const canManage = (isAuthenticated || localDB.isStandalone()) && isOwner;
 
               return (
                 <div
@@ -336,7 +338,7 @@ export const Garage: React.FC<GarageProps> = ({
                           )}
                         </div>
 
-                        {isAuthenticated && isOwner && (
+                        {canManage && (
                           <div className="flex items-center space-x-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => onEditVehicle(v)}
@@ -359,7 +361,7 @@ export const Garage: React.FC<GarageProps> = ({
                           </div>
                         )}
 
-                        {!isOwner && (
+                        {!canManage && (
                           <div className="flex items-center space-x-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                               {v.owner_name || 'Только чтение'}

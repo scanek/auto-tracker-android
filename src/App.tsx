@@ -18,6 +18,7 @@ import { InstallAppModal } from './components/InstallAppModal';
 import { AuthModal } from './components/AuthModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { SettingsModal } from './components/SettingsModal';
+import { BottomNav } from './components/BottomNav';
 import { PublicServiceBooklet } from './pages/PublicServiceBooklet';
 import { Github, ZapOff, RefreshCw, CheckCircle2, AlertTriangle, ShieldAlert, Info, X } from 'lucide-react';
 
@@ -120,6 +121,19 @@ export function App() {
   useEffect(() => {
     checkAuthStatus();
   }, [checkAuthStatus]);
+
+  // Configure Android Status Bar to avoid overlapping with battery, network, clock
+  useEffect(() => {
+    if (localDB.isNative()) {
+      import('@capacitor/status-bar')
+        .then(({ StatusBar, Style }) => {
+          StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+          StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+          StatusBar.setBackgroundColor({ color: '#0f172a' }).catch(() => {});
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   // Listen to custom announcement update event from Admin modal
   useEffect(() => {
@@ -337,12 +351,14 @@ export function App() {
   };
 
   const handleDeleteVehicle = async (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить этот автомобиль и всю его историю?')) {
+    try {
       await api.deleteVehicle(id);
       if (selectedVehicle?.id === id) {
         setSelectedVehicle(null);
       }
       await loadVehicles();
+    } catch (err: any) {
+      alert(err.message || 'Ошибка удаления автомобиля');
     }
   };
 
@@ -501,7 +517,7 @@ export function App() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full pb-28 sm:pb-24">
         {/* System Announcement Banner (e.g. Server Maintenance, Updates) */}
         {announcement && announcement.is_active && announcement.text && !isAnnouncementDismissed && (
           <div
@@ -738,6 +754,16 @@ export function App() {
           </div>
         </div>
       </footer>
+      <BottomNav
+        selectedVehicle={selectedVehicle}
+        onSelectVehicle={setSelectedVehicle}
+        onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenImportModal={() => setIsImportModalOpen(true)}
+        onAddVehicle={handleOpenAddVehicle}
+        onOpenServiceModal={handleOpenServiceModal}
+        onOpenFuelModal={handleOpenFuelModal}
+        onOpenReminderModal={handleOpenReminderModal}
+      />
     </div>
   );
 }

@@ -87,6 +87,7 @@ import {
 import { api } from '../services/api';
 import { notificationService } from '../services/notificationService';
 import { ProgressBar } from '../components/ProgressBar';
+import { localDB } from '../services/localDatabase';
 
 interface VehicleDetailsProps {
   vehicle: Vehicle;
@@ -108,6 +109,7 @@ export const VehicleDetails: React.FC<VehicleDetailsProps> = ({
   onBack,
   onRefreshVehicle,
   onEditVehicle,
+  onDeleteVehicle,
   onOpenServiceModal,
   onOpenFuelModal,
   onOpenReminderModal,
@@ -120,7 +122,7 @@ export const VehicleDetails: React.FC<VehicleDetailsProps> = ({
   const [moreSubTab, setMoreSubTab] = useState<'specs' | 'tyres' | 'documents' | 'tools'>('specs');
   const [serviceFilter, setServiceFilter] = useState<'all' | 'service' | 'repair' | 'upgrade'>('all');
 
-  const isOwner = isAuthenticated && vehicle.is_owner !== false;
+  const isOwner = (isAuthenticated || localDB.isStandalone()) && (vehicle.is_owner !== false || localDB.isStandalone());
 
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
   const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
@@ -670,6 +672,23 @@ export const VehicleDetails: React.FC<VehicleDetailsProps> = ({
                         >
                           <Edit2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                           <span className="font-semibold">Редактировать автомобиль</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {isOwner && onDeleteVehicle && (
+                      <div className="border-t border-slate-100 dark:border-dark-750 my-1 pt-1">
+                        <button
+                          onClick={() => {
+                            setIsActionMenuOpen(false);
+                            if (window.confirm(`Удалить ${vehicle.make} ${vehicle.model} и все связанные записи? Это действие нельзя отменить.`)) {
+                              onDeleteVehicle();
+                            }
+                          }}
+                          className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-2.5 transition"
+                        >
+                          <Trash2 className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                          <span className="font-semibold">Удалить автомобиль</span>
                         </button>
                       </div>
                     )}
